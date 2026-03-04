@@ -23,10 +23,13 @@ class StatusManager: ObservableObject {
         }
     }
     
+    @Published var isAnimating: Bool = false
+
     private var timer: Timer?
     private var tintWindow: NSWindow?
     private var previousStatus: StatusIndicator = .unknown
     private let refreshInterval: TimeInterval = 60 // 1 minute
+    private var animationTask: Task<Void, Never>?
     
     private init() {
         launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -76,9 +79,10 @@ class StatusManager: ObservableObject {
             incidents = summary.incidents
             lastUpdated = Date()
             
-            // Send notification if status changed
+            // Send notification and trigger animation if status changed
             if previousStatus != .unknown && previousStatus != currentStatus {
                 sendStatusChangeNotification()
+                triggerAnimation()
             }
             
             // Update menu bar tint
@@ -110,6 +114,18 @@ class StatusManager: ObservableObject {
         return formatter.localizedString(for: lastUpdated, relativeTo: Date())
     }
     
+    // MARK: - Status Change Animation
+
+    func triggerAnimation() {
+        animationTask?.cancel()
+        isAnimating = true
+        animationTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            guard !Task.isCancelled else { return }
+            isAnimating = false
+        }
+    }
+
     // MARK: - Notifications
     
     private func requestNotificationPermission() {

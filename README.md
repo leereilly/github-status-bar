@@ -1,4 +1,4 @@
-# GitHub Status Menu Bar
+# GitHub Status Bar
 
 A native macOS menu bar app that monitors GitHub's service status in real-time.
 

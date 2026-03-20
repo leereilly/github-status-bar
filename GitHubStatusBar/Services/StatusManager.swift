@@ -70,11 +70,6 @@ class StatusManager: ObservableObject {
         
         do {
             let summary = try await GitHubStatusService.shared.fetchSummary()
-            
-            // Update state
-            let newStatus = StatusIndicator(rawValue: summary.page.name == "GitHub" ? "none" : "unknown") ?? .unknown
-            
-            // Get status from the first component or use a separate status call
             let status = try await GitHubStatusService.shared.fetchStatus()
             
             previousStatus = currentStatus

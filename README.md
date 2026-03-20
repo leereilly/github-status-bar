@@ -49,8 +49,8 @@ brew install --cask github-status-bar
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/gh-status-macos-menu-bar.git
-   cd gh-status-macos-menu-bar
+   git clone https://github.com/leereilly/github-status-for-macos-menu-bar.git
+   cd github-status-for-macos-menu-bar
    ```
 
 2. Open in Xcode:

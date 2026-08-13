@@ -35,12 +35,28 @@ class StatusManager: ObservableObject {
     private var animationTask: Task<Void, Never>?
     private var tintPulseTimer: Timer?
     private var tintPulseStartTime: Date?
+    private var screenParametersObserver: NSObjectProtocol?
     
     private init() {
         launchAtLogin = SMAppService.mainApp.status == .enabled
         tintMenuBar = UserDefaults.standard.bool(forKey: "tintMenuBar")
+        screenParametersObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.updateTintWindowFrame()
+            }
+        }
         requestNotificationPermission()
         startPolling()
+    }
+
+    deinit {
+        if let screenParametersObserver {
+            NotificationCenter.default.removeObserver(screenParametersObserver)
+        }
     }
     
     // MARK: - Polling
@@ -207,13 +223,7 @@ class StatusManager: ObservableObject {
         
         guard let screen = NSScreen.main else { return }
         
-        let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 24
-        let windowFrame = NSRect(
-            x: screen.frame.origin.x,
-            y: screen.frame.maxY - menuBarHeight,
-            width: screen.frame.width,
-            height: menuBarHeight
-        )
+        let windowFrame = menuBarFrame(for: screen)
         
         let window = NSWindow(
             contentRect: windowFrame,
@@ -359,13 +369,7 @@ class StatusManager: ObservableObject {
               let screen = NSScreen.main else { return }
         
         // Create a window that covers the menu bar
-        let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 24
-        let windowFrame = NSRect(
-            x: screen.frame.origin.x,
-            y: screen.frame.maxY - menuBarHeight,
-            width: screen.frame.width,
-            height: menuBarHeight
-        )
+        let windowFrame = menuBarFrame(for: screen)
         
         let window = NSWindow(
             contentRect: windowFrame,
@@ -382,5 +386,20 @@ class StatusManager: ObservableObject {
         window.orderFrontRegardless()
         
         tintWindow = window
+    }
+
+    private func menuBarFrame(for screen: NSScreen) -> NSRect {
+        let menuBarHeight = NSStatusBar.system.thickness
+        return NSRect(
+            x: screen.frame.origin.x,
+            y: screen.frame.maxY - menuBarHeight,
+            width: screen.frame.width,
+            height: menuBarHeight
+        )
+    }
+
+    private func updateTintWindowFrame() {
+        guard let tintWindow, let screen = NSScreen.main else { return }
+        tintWindow.setFrame(menuBarFrame(for: screen), display: true)
     }
 }

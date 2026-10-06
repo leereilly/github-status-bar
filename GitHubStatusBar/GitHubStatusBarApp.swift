@@ -27,6 +27,7 @@ private struct MenuBarLabel: View {
 
     var body: some View {
         Image(nsImage: tintedMenuBarIcon(color: NSColor(statusManager.currentStatus.color)))
+            .frame(height: 22, alignment: .center)
             .opacity(pulseOpacity)
             .onChange(of: statusManager.animationPhase) { phase in
                 switch phase {
